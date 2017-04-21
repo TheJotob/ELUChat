@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
@@ -43,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         Button btnScan = (Button) findViewById(R.id.btnScan);
         btnScan.setOnClickListener(this);
+
+        Button btnSend = (Button) findViewById(R.id.btnSend);
+        btnSend.setOnClickListener(this);
     }
 
     private void bluetoothLeScan() {
@@ -57,6 +61,13 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     @Override
     public void onClick(View v) {
-        bluetoothLeScan();
+        if(v.getId() == R.id.btnScan)
+            bluetoothLeScan();
+
+        else if(v.getId() == R.id.btnSend) {
+            EditText message = (EditText) findViewById(R.id.inputMessage);
+            Toast.makeText(this, message.getText(), Toast.LENGTH_SHORT).show();
+        }
+
     }
 }

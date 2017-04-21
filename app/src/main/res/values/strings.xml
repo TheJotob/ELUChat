@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">ELU Chat</string>
     <string name="ble_not_supported">Bluetooth LE not supported</string>
+    <string name="plcMessage">Message</string>
+    <string name="btnScan">Scan</string>
+    <string name="btnSend">Send</string>
 </resources>
