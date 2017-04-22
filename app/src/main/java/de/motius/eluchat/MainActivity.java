@@ -2,18 +2,28 @@ package de.motius.eluchat;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
@@ -50,21 +60,44 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     }
 
     private void bluetoothLeScan() {
-        BluetoothLeScanner scanner = mBluetoothAdapter.getBluetoothLeScanner();
-        if(scanner != null) {
-            Log.e(LOG_TAG, "Scanning");
-            Toast.makeText(this, "Scanning...", Toast.LENGTH_LONG).show();
-            MScanCallback mScanCallback = new MScanCallback();
-            scanner.startScan(mScanCallback);
-        }
+        BluetoothLeScanner scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
+        List<ScanFilter> filters = new ArrayList<>();
+
+        ScanFilter scFilter = new ScanFilter.Builder()
+                .setDeviceName("RPI3")
+                .build();
+        filters.add(scFilter);
+
+        ScanSettings scSettings = new ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build();
+        ScanCallback mScanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                super.onScanResult(callbackType, result);
+                if (result == null
+                        || result.getDevice() == null
+                        || TextUtils.isEmpty(result.getDevice().getName()))
+                    return;
+                Log.i(LOG_TAG, result.getScanRecord().toString());
+                try {
+                    StringBuilder builder = new StringBuilder(result.getDevice().getName());
+                    builder.append("\n").append(new String(result.getScanRecord().getServiceData(result.getScanRecord().getServiceUuids().get(0)), Charset.forName("UTF-8")));
+                    Log.i(LOG_TAG, builder.toString());
+                } catch (NullPointerException e) {
+                    Log.e(LOG_TAG, e.toString());
+                }
+            }
+        };
+        scanner.startScan(filters, scSettings, mScanCallback);
     }
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.btnScan)
+        if (v.getId() == R.id.btnScan)
             bluetoothLeScan();
 
-        else if(v.getId() == R.id.btnSend) {
+        else if (v.getId() == R.id.btnSend) {
             EditText message = (EditText) findViewById(R.id.inputMessage);
             Toast.makeText(this, message.getText(), Toast.LENGTH_SHORT).show();
         }

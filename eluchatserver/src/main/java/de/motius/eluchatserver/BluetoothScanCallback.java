@@ -1,18 +1,29 @@
-package de.motius.eluchat;
+package de.motius.eluchatserver;
 
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.Context;
 import android.util.Log;
+
 import java.util.List;
 
-public class MScanCallback extends ScanCallback {
+public class BluetoothScanCallback extends ScanCallback {
     private static final String LOG_TAG = "ScanCallback";
+
+    private Context context;
+
+    public BluetoothScanCallback (Context context) {
+        this.context = context;
+    }
 
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
         if(result.getDevice().getName() != null)
             Log.e(LOG_TAG, result.getDevice().getName());
-        Log.i(LOG_TAG, result.getDevice().toString());
+
+        ConnectionCallback callback = new ConnectionCallback(context);
+        result.getDevice().connectGatt(context, true, callback);
 
         super.onScanResult(callbackType, result);
     }
