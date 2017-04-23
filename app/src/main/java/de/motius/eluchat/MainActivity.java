@@ -2,7 +2,6 @@ package de.motius.eluchat;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
@@ -13,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -21,14 +21,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     public static final int REQUEST_ENABLE_BT = 0x01;
-    public static final String LOG_TAG = "MainActivity";
+    public static final String LOG_TAG = "ClientMainActivity";
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -43,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         // Get Bluetooth Manager to
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = mBluetoothManager.getAdapter();
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -60,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     }
 
     private void bluetoothLeScan() {
-        BluetoothLeScanner scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
+        BluetoothLeScanner scanner = mBluetoothAdapter.getBluetoothLeScanner();
         List<ScanFilter> filters = new ArrayList<>();
 
         ScanFilter scFilter = new ScanFilter.Builder()
@@ -71,22 +70,21 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         ScanSettings scSettings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
+
         ScanCallback mScanCallback = new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
-                if (result == null
-                        || result.getDevice() == null
+                Log.e(LOG_TAG, result.toString());
+                if (result.getDevice() == null
                         || TextUtils.isEmpty(result.getDevice().getName()))
                     return;
-                Log.i(LOG_TAG, result.getScanRecord().toString());
-                try {
-                    StringBuilder builder = new StringBuilder(result.getDevice().getName());
-                    builder.append("\n").append(new String(result.getScanRecord().getServiceData(result.getScanRecord().getServiceUuids().get(0)), Charset.forName("UTF-8")));
-                    Log.i(LOG_TAG, builder.toString());
-                } catch (NullPointerException e) {
-                    Log.e(LOG_TAG, e.toString());
-                }
+
+                Log.i(LOG_TAG, result.toString());
+                //Handler handler = new Handler();
+                //BluetoothChatService service = new BluetoothChatService(getApplicationContext(), handler);
+                //service.start();
+                //service.connect(result.getDevice(), true);
             }
         };
         scanner.startScan(filters, scSettings, mScanCallback);
@@ -101,6 +99,5 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             EditText message = (EditText) findViewById(R.id.inputMessage);
             Toast.makeText(this, message.getText(), Toast.LENGTH_SHORT).show();
         }
-
     }
 }
